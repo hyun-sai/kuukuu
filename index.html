@@ -131,7 +131,7 @@ summary{cursor:pointer;font-weight:700}
   <div class="people" id="people"></div>
   <datalist id="stations"></datalist>
   <div class="row">
-    <button type="button" id="sample">예시로 채우기</button>
+    <button type="button" id="sample">기본 멤버로 채우기</button>
     <button type="button" id="clear">모두 지우기</button>
   </div>
   <p class="hint" id="status"></p>
@@ -229,12 +229,13 @@ const DEFAULT_BRANCHES=[
  {n:"인천청라점",c:[37.5330,126.6460],a:"인천 서구 크리스탈로74번길 17"},
  {n:"검단신도시점",c:[37.5940,126.6700],a:"인천 서구 발산로5번길 12"}
 ];
-const SAMPLE=[["지민","노원"],["서연","홍대입구"],["도윤","강남"],["하은","잠실"],["민준","신림"],["예린","부천"],["준호","수원"],["유나","주엽"],["태오","천호"],["소희","영등포"],["건우","왕십리"],["다인","판교"]];
+const SAMPLE=[["최현성","가좌"],["최민서","잠실"],["김진규","하남시청"],["양성욱","성신여대입구"],["한지빈","오산"],["김수민","천안"],["임준서","도봉"],["주소영","불광"],["고나연","서울대입구"],["강민규","인천시청"],["윤서연","인천"]];
 
 
 const $=s=>document.querySelector(s);
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-let people=store.get("kq_people",Array.from({length:12},()=>["",""]));
+const defaultPeople=()=>Array.from({length:12},(_,i)=>SAMPLE[i]?[...SAMPLE[i]]:["",""]);
+let people=store.get("kq_people",null)||defaultPeople();
 let branches=store.get("kq_branches_v2",null)||DEFAULT_BRANCHES.map(x=>({...x}));
 let w=store.get("kq_w",50);
 let apiKey=store.get("kq_odsay_key","");
@@ -279,7 +280,7 @@ $("#people").addEventListener("input",e=>{
   people[+el.dataset.i][e.target.classList.contains("nm")?0:1]=e.target.value;
   store.set("kq_people",people);markPeople();selected=null;render();
 });
-$("#sample").onclick=()=>{people=SAMPLE.map(x=>[...x]);store.set("kq_people",people);renderPeople();selected=null;render()};
+$("#sample").onclick=()=>{people=defaultPeople();store.set("kq_people",people);renderPeople();selected=null;render()};
 $("#clear").onclick=()=>{people=Array.from({length:12},()=>["",""]);store.set("kq_people",people);renderPeople();selected=null;render()};
 
 function wText(){
@@ -371,7 +372,7 @@ function render(){
   root.style.setProperty("--accent",tab==="park"?"var(--river)":"var(--tuna)");
   root.style.setProperty("--accent-soft",tab==="park"?"var(--river-soft)":"var(--tuna-soft)");
   const ppl=pplList(),out=$("#result");
-  if(ppl.length<2){out.innerHTML=`<div class="empty">출발역을 2명 이상 넣으면 결과가 나와요.<br>처음이라면 ‘예시로 채우기’를 눌러 보세요.</div>`;return}
+  if(ppl.length<2){out.innerHTML=`<div class="empty">출발역을 2명 이상 넣으면 결과가 나와요.<br>‘기본 멤버로 채우기’를 누르면 처음 명단으로 돌아가요.</div>`;return}
   const list=targets();
   if(!list.length){out.innerHTML=`<div class="empty">비교할 지점이 없어요. 아래 ‘쿠우쿠우 지점 목록 편집’에서 지점을 추가해 주세요.</div>`;return}
 
