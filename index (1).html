@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>쿠우쿠우 어디서 만나? (대중교통 시간)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F6F7F4; --surface:#FFFFFF; --ink:#22201E; --muted:#6B6863; --line:#DEDDD7;
+  --tuna:#C8324B; --tuna-soft:#F7DCE1; --river:#2A73B5; --river-soft:#DCEAF6; --bar:#E9E8E3; --warn:#9A5B00;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#171615; --surface:#22201F; --ink:#F1EFEA; --muted:#A8A49C; --line:#3A3734;
+    --tuna:#F0697F; --tuna-soft:#4A2229; --river:#6FB0EA; --river-soft:#1E3346; --bar:#33302D; --warn:#F2B35C; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#171615; --surface:#22201F; --ink:#F1EFEA; --muted:#A8A49C; --line:#3A3734;
+  --tuna:#F0697F; --tuna-soft:#4A2229; --river:#6FB0EA; --river-soft:#1E3346; --bar:#33302D; --warn:#F2B35C; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;line-height:1.6;font-size:16px}
+main{max-width:880px;margin:0 auto;padding:28px 18px 64px}
+h1{font-family:"Black Han Sans","IBM Plex Sans KR",sans-serif;font-weight:400;font-size:clamp(2.2rem,8vw,3.6rem);line-height:1.05;margin:8px 0 10px}
+h1 .dot{display:inline-block;width:.42em;height:.42em;border-radius:50%;background:var(--tuna);margin-left:.08em;vertical-align:.08em}
+.lead{color:var(--muted);margin:0 0 28px;max-width:60ch}
+h2{font-size:1.15rem;margin:36px 0 12px;font-weight:700}
+.people{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+.person{display:flex;gap:6px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px 8px}
+.person .num{width:24px;height:24px;flex:none;border-radius:50%;background:var(--bar);color:var(--muted);font-size:.78rem;display:grid;place-items:center;font-weight:700}
+.person.ok .num{background:var(--tuna);color:#fff}
+.person.bad{border-color:var(--tuna)}
+.person input{border:0;background:transparent;color:var(--ink);font:inherit;min-width:0;padding:4px 2px}
+.person input.nm{width:38%;color:var(--muted)}
+.person input.st{flex:1;font-weight:500}
+input:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid var(--river);outline-offset:2px;border-radius:6px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+button,select{font:inherit;cursor:pointer;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 14px;font-size:.92rem}
+button.primary{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:700}
+button:disabled{opacity:.5;cursor:default}
+.hint{font-size:.85rem;color:var(--muted)}
+.keybox{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.keybox input{font:inherit;border:1px solid var(--line);border-radius:8px;padding:7px 10px;background:var(--bg);color:var(--ink);flex:1 1 220px;min-width:0}
+.keybox p{margin:6px 0 0}
+a{color:var(--river)}
+
+.balance{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.balance .ends{display:flex;justify-content:space-between;font-weight:700;font-size:.95rem}
+.balance input[type=range]{width:100%;accent-color:var(--tuna);margin:10px 0 6px}
+.balance p{margin:4px 0 0;font-size:.88rem;color:var(--muted)}
+
+.tabs{display:flex;border-bottom:2px solid var(--line);margin-top:36px}
+.tab{border:0;border-radius:0;background:none;padding:10px 16px;font-weight:700;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px;font-size:1rem}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent,var(--tuna))}
+
+.transit{margin-top:16px;border:1px dashed var(--accent);border-radius:14px;padding:12px 14px;background:var(--surface)}
+.transit .mode{font-weight:700}
+.transit .err{color:var(--warn);font-size:.88rem;margin:6px 0 0}
+.prog{height:6px;background:var(--bar);border-radius:3px;overflow:hidden;margin-top:8px}
+.prog span{display:block;height:100%;background:var(--accent);transition:width .2s}
+
+.pick{margin-top:14px;background:var(--surface);border:2px solid var(--accent);border-radius:16px;padding:18px}
+.pick .where{font-family:"Black Han Sans",sans-serif;font-size:clamp(1.8rem,6vw,2.4rem);line-height:1.1;margin:0}
+.pick .near{color:var(--muted);font-size:.9rem;margin:2px 0 12px}
+.stats{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.92rem;margin-bottom:14px}
+.stats b{font-size:1.05rem}
+.bars{display:grid;gap:5px}
+.bar{display:grid;grid-template-columns:minmax(64px,110px) 1fr 64px;gap:8px;align-items:center;font-size:.88rem}
+.bar .who{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .who small{color:var(--muted)}
+.bar .track{height:12px;background:var(--bar);border-radius:6px;overflow:hidden}
+.bar .fill{height:100%;background:var(--accent);border-radius:6px;transition:width .35s ease}
+.bar .fill.far{background:var(--ink)}
+.bar .val{text-align:right;font-variant-numeric:tabular-nums}
+.bar .val small{color:var(--muted)}
+
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.cmp{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--surface)}
+.cmp h3{font-size:.88rem;margin:0 0 4px;color:var(--muted);font-weight:500}
+.cmp .n{font-weight:700;font-size:1.1rem}
+.cmp .s{font-size:.85rem;color:var(--muted)}
+.tradeoff{margin:10px 0 0;font-size:.92rem;background:var(--accent-soft);border-radius:10px;padding:10px 12px}
+
+.tablewrap{overflow-x:auto;margin-top:16px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:460px}
+th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+th{color:var(--muted);font-weight:500;font-size:.82rem}
+tr.top td{font-weight:700}
+tr:last-child td{border-bottom:0}
+tbody tr{cursor:pointer}
+tbody tr:hover td,tr.sel td{background:var(--accent-soft)}
+
+details{margin-top:30px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+summary{cursor:pointer;font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.chip{display:inline-flex;gap:6px;align-items:center;background:var(--bar);border-radius:999px;padding:3px 6px 3px 12px;font-size:.88rem}
+.chip button{border:0;background:none;padding:0 6px;color:var(--muted);font-size:1rem;line-height:1}
+.addrow{display:flex;gap:6px;flex-wrap:wrap}
+.addrow input{font:inherit;border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--bg);color:var(--ink);min-width:0;flex:1 1 140px}
+.empty{margin-top:18px;padding:22px;border:1px dashed var(--line);border-radius:14px;color:var(--muted);text-align:center}
+.note{font-size:.82rem;color:var(--muted);margin-top:28px}
+@media (max-width:520px){.compare{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.bar .fill,.prog span{transition:none}}
+</style>
+</head>
+<body>
+<main>
+  <h1>쿠우쿠우 어디서 만나<span class="dot"></span></h1>
+  <p class="lead">각자 출발역을 넣으면 직선거리로 후보를 먼저 추리고, 그중 상위 몇 곳을 실제 대중교통 소요시간으로 다시 비교해요. 합계가 짧은 곳과 다 같이 공평한 곳 사이에서 직접 고를 수 있어요.</p>
+
+  <h2>ODsay API 키</h2>
+  <div class="keybox">
+    <div class="row" style="margin-top:0">
+      <input id="key" type="password" placeholder="ODsay에서 발급받은 URL(웹)용 API 키" autocomplete="off">
+      <button type="button" id="keysave" class="primary">키 저장</button>
+      <button type="button" id="cacheclear">저장된 시간 지우기</button>
+    </div>
+    <p class="hint" id="keymsg"></p>
+    <p class="hint"><a href="https://lab.odsay.com" target="_blank" rel="noopener">lab.odsay.com</a>에서 애플리케이션을 등록할 때 플랫폼을 URL로 고르고, 이 페이지를 올린 주소(예: https://아이디.github.io)를 등록해야 키가 작동해요. 키는 이 브라우저에만 저장돼요.</p>
+  </div>
+
+  <h2>출발역 (최대 12명)</h2>
+  <div class="people" id="people"></div>
+  <datalist id="stations"></datalist>
+  <div class="row">
+    <button type="button" id="sample">예시로 채우기</button>
+    <button type="button" id="clear">모두 지우기</button>
+  </div>
+  <p class="hint" id="status"></p>
+
+  <h2>어떤 기준으로 고를까요?</h2>
+  <div class="balance">
+    <div class="ends"><span>합계 최소</span><span>모두 공평하게</span></div>
+    <input type="range" id="w" min="0" max="100" value="50" aria-label="합계와 공평 사이의 비중">
+    <p id="wdesc"></p>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" data-t="kq" aria-selected="true">🍣 쿠우쿠우</button>
+    <button class="tab" role="tab" data-t="park" aria-selected="false">🌊 한강공원</button>
+  </div>
+  <div id="result"></div>
+
+  <details>
+    <summary>쿠우쿠우 지점 목록 편집</summary>
+    <p class="hint">쿠우쿠우 공식 홈페이지 매장찾기(2026년 10월 확인)에 있는 서울·경기·인천 41곳이에요. 위치는 주소로 추정한 좌표라 수백 m 정도 오차가 있을 수 있어요.</p>
+    <div class="chips" id="chips"></div>
+    <div class="addrow">
+      <input id="bname" placeholder="지점 이름 (예: 강남점)">
+      <input id="bst" list="stations" placeholder="가장 가까운 역">
+      <button type="button" id="badd">지점 추가</button>
+      <button type="button" id="breset">기본값으로</button>
+    </div>
+    <p class="hint" id="bmsg"></p>
+  </details>
+
+  <p class="note">소요시간은 ODsay 대중교통 길찾기의 추천 경로 중 가장 빠른 경로 기준이에요(출발역에서 목적지까지, 도보 포함). 700m 이내는 도보 시간으로 계산해요. 대중교통 정보 powered by <a href="https://www.odsay.com" target="_blank" rel="noopener">www.ODsay.com</a></p>
+</main>
+
+<script>
+const S={
+"서울역":[37.5547,126.9707],"시청":[37.5657,126.9769],"종각":[37.5702,126.9831],"종로3가":[37.5715,126.9918],"종로5가":[37.5709,127.0019],"동대문":[37.5714,127.0110],"신설동":[37.5752,127.0250],"제기동":[37.5781,127.0349],"청량리":[37.5803,127.0469],"회기":[37.5896,127.0578],"외대앞":[37.5963,127.0635],"석계":[37.6150,127.0657],"광운대":[37.6236,127.0619],"월계":[37.6333,127.0587],"창동":[37.6532,127.0477],"도봉산":[37.6896,127.0461],"의정부":[37.7385,127.0459],"용산":[37.5299,126.9648],"노량진":[37.5131,126.9425],"대방":[37.5133,126.9264],"영등포":[37.5156,126.9073],"구로":[37.5033,126.8820],"개봉":[37.4946,126.8586],"역곡":[37.4853,126.8115],"부천":[37.4840,126.7828],"송내":[37.4876,126.7529],"부평":[37.4895,126.7245],"주안":[37.4649,126.6807],"동인천":[37.4752,126.6327],"인천":[37.4766,126.6168],"가산디지털단지":[37.4815,126.8827],"독산":[37.4661,126.8894],"금천구청":[37.4559,126.8943],"석수":[37.4349,126.9022],"안양":[37.4019,126.9227],"금정":[37.3722,126.9434],"수원":[37.2659,127.0001],"화서":[37.2841,126.9895],"성균관대":[37.3003,126.9710],"의왕":[37.3205,126.9480],"당정":[37.3434,126.9480],"군포":[37.3536,126.9488],"세류":[37.2440,127.0136],"병점":[37.2068,127.0331],"서동탄":[37.1958,127.0517],"세마":[37.1876,127.0434],"오산대":[37.1689,127.0630],"오산":[37.1452,127.0670],"진위":[37.1093,127.0624],"송탄":[37.0757,127.0545],"서정리":[37.0563,127.0527],"지제":[37.0187,127.0705],"평택":[36.9908,127.0857],
+"을지로입구":[37.5660,126.9822],"을지로3가":[37.5663,126.9917],"을지로4가":[37.5667,126.9978],"동대문역사문화공원":[37.5651,127.0079],"신당":[37.5657,127.0196],"상왕십리":[37.5644,127.0294],"왕십리":[37.5613,127.0371],"한양대":[37.5555,127.0436],"뚝섬":[37.5471,127.0474],"성수":[37.5446,127.0561],"건대입구":[37.5404,127.0700],"구의":[37.5372,127.0858],"강변":[37.5352,127.0947],"잠실나루":[37.5207,127.1038],"잠실":[37.5133,127.1001],"잠실새내":[37.5116,127.0863],"종합운동장":[37.5109,127.0737],"삼성":[37.5088,127.0631],"선릉":[37.5045,127.0490],"역삼":[37.5006,127.0364],"강남":[37.4979,127.0276],"교대":[37.4934,127.0140],"서초":[37.4918,127.0076],"방배":[37.4815,126.9976],"사당":[37.4766,126.9816],"낙성대":[37.4769,126.9636],"서울대입구":[37.4812,126.9527],"봉천":[37.4825,126.9417],"신림":[37.4842,126.9297],"신대방":[37.4875,126.9131],"구로디지털단지":[37.4852,126.9015],"대림":[37.4925,126.8949],"신도림":[37.5088,126.8913],"문래":[37.5179,126.8947],"영등포구청":[37.5250,126.8960],"당산":[37.5343,126.9025],"합정":[37.5496,126.9139],"홍대입구":[37.5572,126.9245],"신촌":[37.5552,126.9369],"이대":[37.5567,126.9460],"아현":[37.5574,126.9560],"충정로":[37.5597,126.9637],"까치산":[37.5317,126.8466],"양천구청":[37.5122,126.8656],"신정네거리":[37.5200,126.8530],
+"구파발":[37.6369,126.9188],"연신내":[37.6190,126.9210],"불광":[37.6105,126.9300],"녹번":[37.6009,126.9356],"홍제":[37.5890,126.9437],"독립문":[37.5745,126.9578],"경복궁":[37.5757,126.9735],"안국":[37.5765,126.9854],"충무로":[37.5612,126.9943],"동대입구":[37.5591,127.0055],"약수":[37.5543,127.0107],"금호":[37.5482,127.0158],"옥수":[37.5405,127.0177],"압구정":[37.5270,127.0284],"신사":[37.5164,127.0203],"잠원":[37.5127,127.0115],"고속터미널":[37.5049,127.0049],"남부터미널":[37.4850,127.0163],"양재":[37.4842,127.0346],"도곡":[37.4910,127.0555],"대치":[37.4945,127.0636],"학여울":[37.4966,127.0711],"대청":[37.4936,127.0795],"일원":[37.4838,127.0843],"수서":[37.4873,127.1018],"가락시장":[37.4925,127.1182],"경찰병원":[37.4958,127.1243],"오금":[37.5021,127.1281],"대화":[37.6761,126.7473],"주엽":[37.6703,126.7613],"정발산":[37.6599,126.7732],"마두":[37.6524,126.7776],"백석":[37.6430,126.7880],"대곡":[37.6317,126.8110],"화정":[37.6347,126.8326],"원당":[37.6532,126.8429],"지축":[37.6482,126.9139],
+"불암산":[37.6700,127.0791],"상계":[37.6608,127.0732],"노원":[37.6551,127.0613],"쌍문":[37.6486,127.0347],"수유":[37.6380,127.0257],"미아":[37.6268,127.0261],"미아사거리":[37.6133,127.0300],"길음":[37.6033,127.0250],"성신여대입구":[37.5926,127.0164],"한성대입구":[37.5885,127.0062],"혜화":[37.5822,127.0019],"명동":[37.5609,126.9863],"회현":[37.5585,126.9782],"숙대입구":[37.5448,126.9721],"삼각지":[37.5347,126.9730],"신용산":[37.5291,126.9680],"이촌":[37.5222,126.9742],"동작":[37.5028,126.9796],"이수":[37.4868,126.9819],"남태령":[37.4639,126.9888],"정부과천청사":[37.4262,126.9899],"인덕원":[37.4013,126.9767],"평촌":[37.3943,126.9636],"범계":[37.3897,126.9507],"산본":[37.3581,126.9330],"중앙":[37.3160,126.8387],"한대앞":[37.3097,126.8536],"고잔":[37.3168,126.8233],"오이도":[37.3622,126.7385],
+"방화":[37.5775,126.8127],"김포공항":[37.5624,126.8013],"송정":[37.5612,126.8114],"마곡":[37.5602,126.8254],"발산":[37.5585,126.8376],"우장산":[37.5484,126.8364],"화곡":[37.5414,126.8404],"목동":[37.5260,126.8648],"오목교":[37.5245,126.8750],"여의도":[37.5216,126.9243],"여의나루":[37.5271,126.9329],"마포":[37.5396,126.9459],"공덕":[37.5435,126.9515],"애오개":[37.5535,126.9566],"서대문":[37.5658,126.9666],"광화문":[37.5710,126.9768],"청구":[37.5603,127.0137],"마장":[37.5661,127.0429],"답십리":[37.5669,127.0525],"장한평":[37.5614,127.0645],"군자":[37.5571,127.0795],"아차산":[37.5517,127.0897],"광나루":[37.5452,127.1036],"천호":[37.5385,127.1236],"강동":[37.5358,127.1325],"길동":[37.5378,127.1401],"명일":[37.5512,127.1440],"고덕":[37.5550,127.1543],"상일동":[37.5567,127.1660],"둔촌동":[37.5279,127.1363],"올림픽공원":[37.5162,127.1308],"방이":[37.5085,127.1260],"개롱":[37.4980,127.1348],"거여":[37.4934,127.1440],"마천":[37.4950,127.1528],"하남풍산":[37.5523,127.2037],"하남시청":[37.5420,127.2060],
+"응암":[37.5986,126.9155],"새절":[37.5913,126.9136],"증산":[37.5838,126.9097],"디지털미디어시티":[37.5772,126.8996],"월드컵경기장":[37.5695,126.8993],"마포구청":[37.5635,126.9035],"망원":[37.5560,126.9101],"상수":[37.5477,126.9229],"광흥창":[37.5475,126.9319],"효창공원앞":[37.5394,126.9613],"녹사평":[37.5345,126.9866],"이태원":[37.5345,126.9946],"한강진":[37.5397,127.0018],"안암":[37.5862,127.0293],"고려대":[37.5904,127.0362],"월곡":[37.6019,127.0413],"돌곶이":[37.6105,127.0563],"태릉입구":[37.6178,127.0750],"화랑대":[37.6200,127.0840],"봉화산":[37.6174,127.0913],
+"수락산":[37.6777,127.0552],"마들":[37.6648,127.0577],"중계":[37.6449,127.0643],"하계":[37.6363,127.0678],"공릉":[37.6256,127.0730],"먹골":[37.6106,127.0776],"중화":[37.6025,127.0792],"상봉":[37.5965,127.0852],"면목":[37.5886,127.0874],"사가정":[37.5809,127.0886],"용마산":[37.5737,127.0866],"중곡":[37.5658,127.0842],"어린이대공원":[37.5480,127.0746],"뚝섬유원지":[37.5316,127.0667],"청담":[37.5193,127.0518],"강남구청":[37.5172,127.0412],"학동":[37.5143,127.0317],"논현":[37.5110,127.0215],"반포":[37.5081,127.0115],"내방":[37.4877,126.9935],"남성":[37.4846,126.9711],"숭실대입구":[37.4963,126.9536],"상도":[37.5028,126.9479],"장승배기":[37.5048,126.9391],"신대방삼거리":[37.4997,126.9283],"보라매":[37.4998,126.9205],"신풍":[37.5001,126.9087],"남구로":[37.4861,126.8872],"철산":[37.4761,126.8679],"광명사거리":[37.4792,126.8548],"천왕":[37.4866,126.8385],"온수":[37.4921,126.8233],"부천종합운동장":[37.5048,126.7974],"상동":[37.5058,126.7531],"부평구청":[37.5076,126.7214],
+"암사":[37.5501,127.1275],"몽촌토성":[37.5172,127.1123],"석촌":[37.5054,127.1069],"송파":[37.4998,127.1124],"문정":[37.4858,127.1225],"장지":[37.4787,127.1262],"복정":[37.4700,127.1265],"모란":[37.4321,127.1290],
+"가양":[37.5614,126.8544],"등촌":[37.5508,126.8655],"염창":[37.5469,126.8746],"마곡나루":[37.5671,126.8273],"국회의사당":[37.5281,126.9178],"흑석":[37.5088,126.9636],"신논현":[37.5045,127.0250],"선정릉":[37.5104,127.0437],"봉은사":[37.5143,127.0601],"중앙보훈병원":[37.5297,127.1483],
+"판교":[37.3948,127.1112],"정자":[37.3672,127.1083],"서현":[37.3850,127.1233],"야탑":[37.4114,127.1286],"미금":[37.3500,127.1090],"죽전":[37.3248,127.1075],"광교중앙":[37.2886,127.0516],"수원시청":[37.2617,127.0310],"동탄":[37.2005,127.0966],"서울숲":[37.5435,127.0446],"압구정로데오":[37.5274,127.0405],
+"일산":[37.6820,126.7697],"행신":[37.6124,126.8341],"가좌":[37.5689,126.9136],"수색":[37.5807,126.8957],"계양":[37.5713,126.7365],"검암":[37.5693,126.6737],"청라국제도시":[37.5560,126.6244],"인천시청":[37.4573,126.7021],"예술회관":[37.4494,126.7008],"인천대입구":[37.3862,126.6394],"구리":[37.6032,127.1436],"도농":[37.6087,127.1612]
+};
+const PARKS=[
+ {name:"광나루한강공원",c:[37.5465,127.1205]},{name:"잠실한강공원",c:[37.5181,127.0826]},{name:"뚝섬한강공원",c:[37.5292,127.0697]},
+ {name:"잠원한강공원",c:[37.5205,127.0109]},{name:"반포한강공원",c:[37.5100,126.9960]},{name:"이촌한강공원",c:[37.5175,126.9705]},
+ {name:"여의도한강공원",c:[37.5284,126.9327]},{name:"양화한강공원",c:[37.5380,126.9020]},{name:"망원한강공원",c:[37.5555,126.8955]},
+ {name:"난지한강공원",c:[37.5665,126.8758]},{name:"강서한강공원",c:[37.5865,126.8160]}
+];
+// 출처: 쿠우쿠우 공식 홈페이지 매장찾기 (2026년 10월 확인). 좌표는 주소로 추정한 값
+const DEFAULT_BRANCHES=[
+ {n:"구로점 (골드)",c:[37.4990,126.8690],a:"서울 구로구 중앙로1길 36"},
+ {n:"강동점 (골드)",c:[37.5440,127.1355],a:"서울 강동구 양재대로 1571 홈플러스"},
+ {n:"노원점",c:[37.6385,127.0700],a:"서울 노원구 노원로 247 (하계동)"},
+ {n:"보라매공원점 (골드)",c:[37.4985,126.9255],a:"서울 동작구 보라매로5가길 16"},
+ {n:"연신내점",c:[37.6185,126.9205],a:"서울 은평구 통일로 856"},
+ {n:"송파점",c:[37.4790,127.1240],a:"서울 송파구 송파대로 111 (문정동)"},
+ {n:"상봉점",c:[37.5960,127.0860],a:"서울 중랑구 상봉2동 101"},
+ {n:"부천점 (골드)",c:[37.5040,126.7630],a:"부천 원미구 중동 부흥로315번길 62"},
+ {n:"수원시청점 (골드)",c:[37.2630,127.0310],a:"수원 권선구 권광로139번길 11"},
+ {n:"서수원점",c:[37.2730,126.9580],a:"수원 권선구 금곡동"},
+ {n:"수원병점점",c:[37.2080,127.0330],a:"화성 진안동 병점노을7로 5"},
+ {n:"동탄점",c:[37.2010,127.0720],a:"화성 반송동 노작로1가길 8"},
+ {n:"향남점",c:[37.1320,126.9200],a:"화성 향남읍"},
+ {n:"분당점 (골드)",c:[37.3395,127.1095],a:"성남 분당구 구미동 (오리역 근처)"},
+ {n:"산본점",c:[37.3590,126.9320],a:"군포 산본동"},
+ {n:"안산점 (골드)",c:[37.3165,126.8290],a:"안산 단원구 고잔동"},
+ {n:"시흥배곧점 (골드)",c:[37.3730,126.7320],a:"시흥 배곧동"},
+ {n:"은계점",c:[37.4380,126.8000],a:"시흥 은계번영길 23"},
+ {n:"하남미사점",c:[37.5600,127.1930],a:"하남 망월동"},
+ {n:"다산점 (골드, 11/19 오픈 예정)",c:[37.6150,127.1590],a:"남양주 경춘로 368"},
+ {n:"마석점",c:[37.6520,127.3110],a:"남양주 화도읍"},
+ {n:"민락점 (골드)",c:[37.7470,127.1000],a:"의정부 천보로 56"},
+ {n:"양주옥정점",c:[37.8210,127.0920],a:"양주 옥정로8길 40"},
+ {n:"삼송원흥점",c:[37.6510,126.8720],a:"고양 덕양구 원흥동"},
+ {n:"화정점",c:[37.6355,126.8320],a:"고양 덕양구 화정로 53"},
+ {n:"일산호수공원점",c:[37.6560,126.7680],a:"고양 일산동구 장항동"},
+ {n:"파주운정점",c:[37.7180,126.7530],a:"파주 와석순환로 507"},
+ {n:"김포운양점",c:[37.6550,126.6850],a:"김포 김포한강1로 250"},
+ {n:"경기광주점",c:[37.4130,127.2560],a:"광주 경안동"},
+ {n:"용인점",c:[37.2370,127.2030],a:"용인 처인구"},
+ {n:"오산점",c:[37.1530,127.0700],a:"오산 성호대로 122"},
+ {n:"이천점",c:[37.2780,127.4420],a:"이천 중리천로 76"},
+ {n:"송탄점",c:[37.0800,127.0560],a:"평택 경기대로 1407"},
+ {n:"평택고덕점",c:[37.0470,127.0510],a:"평택 고덕국제대로 77"},
+ {n:"부평점 (골드)",c:[37.4920,126.7230],a:"인천 부평구 부흥로 264"},
+ {n:"주안역점",c:[37.4650,126.6810],a:"인천 미추홀구 주안로 116"},
+ {n:"인천 구월점",c:[37.4430,126.7170],a:"인천 남동구 구월동"},
+ {n:"인천논현점",c:[37.4010,126.7230],a:"인천 남동구 논고개로 101"},
+ {n:"인천계양점",c:[37.5440,126.7280],a:"인천 계양구 용종동"},
+ {n:"인천청라점",c:[37.5330,126.6460],a:"인천 서구 크리스탈로74번길 17"},
+ {n:"검단신도시점",c:[37.5940,126.6700],a:"인천 서구 발산로5번길 12"}
+];
+const SAMPLE=[["지민","노원"],["서연","홍대입구"],["도윤","강남"],["하은","잠실"],["민준","신림"],["예린","부천"],["준호","수원"],["유나","주엽"],["태오","천호"],["소희","영등포"],["건우","왕십리"],["다인","판교"]];
+
+
+const $=s=>document.querySelector(s);
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let people=store.get("kq_people",Array.from({length:12},()=>["",""]));
+let branches=store.get("kq_branches_v2",null)||DEFAULT_BRANCHES.map(x=>({...x}));
+let w=store.get("kq_w",50);
+let apiKey=store.get("kq_odsay_key","");
+let timeCache=store.get("kq_time_cache",{});
+let tab="kq", selected=null, showTime=true, busy=false, prog={done:0,total:0}, lastErr="";
+let topN=store.get("kq_topn",2);
+const DAILY_LIMIT=30;
+const today=()=>new Date().toLocaleDateString("sv");
+function usage(){let u=store.get("kq_usage",null);if(!u||u.d!==today())u={d:today(),n:0};return u}
+function addUsage(){const u=usage();u.n++;store.set("kq_usage",u)}
+const remaining=()=>Math.max(0,DAILY_LIMIT-usage().n);
+const timeRun={kq:null,park:null};
+
+$("#stations").innerHTML=Object.keys(S).sort((a,b)=>a.localeCompare(b,"ko")).map(n=>`<option value="${n}">`).join("");
+const norm=s=>(s||"").trim().replace(/역$/,"");
+function hav(a,b){const R=6371,r=x=>x*Math.PI/180;const dl=r(b[0]-a[0]),dn=r(b[1]-a[1]);const h=Math.sin(dl/2)**2+Math.cos(r(a[0]))*Math.cos(r(b[0]))*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const tkey=(st,name)=>st+"→"+name;
+
+/* ---------- API 키 ---------- */
+$("#key").value=apiKey;
+$("#keymsg").textContent=apiKey?"저장된 키가 있어요.":"키를 넣으면 대중교통 시간 계산을 쓸 수 있어요.";
+$("#keysave").onclick=()=>{apiKey=$("#key").value.trim();store.set("kq_odsay_key",apiKey);$("#keymsg").textContent=apiKey?"키를 저장했어요.":"키를 지웠어요.";render()};
+$("#cacheclear").onclick=()=>{timeCache={};store.set("kq_time_cache",timeCache);timeRun.kq=timeRun.park=null;$("#keymsg").textContent="저장된 소요시간을 모두 지웠어요.";render()};
+
+/* ---------- 사람 입력 ---------- */
+function renderPeople(){
+  $("#people").innerHTML=people.map((p,i)=>`<div class="person" data-i="${i}"><span class="num">${i+1}</span><input class="nm" placeholder="이름" value="${esc(p[0])}" aria-label="${i+1}번 이름"><input class="st" list="stations" placeholder="출발역" value="${esc(p[1])}" aria-label="${i+1}번 출발역"></div>`).join("");
+  markPeople();
+}
+function markPeople(){
+  let ok=0,bad=[];
+  document.querySelectorAll(".person").forEach(el=>{
+    const st=norm(people[el.dataset.i][1]);
+    el.classList.toggle("ok",!!S[st]);el.classList.toggle("bad",!!st&&!S[st]);
+    if(S[st])ok++;else if(st)bad.push(st);
+  });
+  $("#status").textContent=`${ok}명 입력됨`+(bad.length?` · 목록에 없는 역: ${bad.join(", ")} (목록에서 골라 주세요)`:"");
+}
+$("#people").addEventListener("input",e=>{
+  const el=e.target.closest(".person");if(!el)return;
+  people[+el.dataset.i][e.target.classList.contains("nm")?0:1]=e.target.value;
+  store.set("kq_people",people);markPeople();selected=null;render();
+});
+$("#sample").onclick=()=>{people=SAMPLE.map(x=>[...x]);store.set("kq_people",people);renderPeople();selected=null;render()};
+$("#clear").onclick=()=>{people=Array.from({length:12},()=>["",""]);store.set("kq_people",people);renderPeople();selected=null;render()};
+
+function wText(){
+  if(w<=15)return "모두의 합계가 가장 짧은 곳을 골라요. 한 명만 멀어도 괜찮다면 이쪽.";
+  if(w>=85)return "가장 멀리 오는 사람의 부담을 최대한 줄여요. 다 같이 조금씩 양보하는 방식.";
+  return "평균과 가장 먼 사람의 값을 섞어서 봐요. 오른쪽으로 갈수록 공평함을 더 중시해요.";
+}
+$("#w").value=w;$("#wdesc").textContent=wText();
+$("#w").addEventListener("input",e=>{w=+e.target.value;store.set("kq_w",w);$("#wdesc").textContent=wText();selected=null;render()});
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{tab=b.dataset.t;selected=null;lastErr="";document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected",x===b));render()});
+
+/* ---------- 계산 ---------- */
+function pplList(){
+  return people.map((p,i)=>({name:p[0].trim()||`${i+1}번`,st:norm(p[1])})).filter(p=>S[p.st]).map(p=>({...p,c:S[p.st]}));
+}
+const pSig=ppl=>ppl.map(p=>p.st).sort().join(",");
+function targets(t=tab){
+  if(t==="park")return PARKS.map(p=>({name:p.name,near:"",c:p.c}));
+  return branches.filter(b=>b&&b.c).map(b=>({name:"쿠우쿠우 "+b.n,near:b.a||"",c:b.c}));
+}
+function evaluate(list,ppl,metric){
+  const k=w/100;
+  return list.map(t=>{
+    const meta=[];
+    const d=ppl.map(p=>{
+      if(metric==="km")return hav(p.c,t.c);
+      const r=timeCache[tkey(p.st,t.name)];meta.push(r);return r.m;
+    });
+    const total=d.reduce((a,b)=>a+b,0),mean=total/d.length,max=Math.max(...d);
+    const sd=Math.sqrt(d.reduce((a,b)=>a+(b-mean)**2,0)/d.length);
+    return {...t,d,meta,total,mean,max,sd,score:(1-k)*mean+k*max};
+  });
+}
+
+/* ---------- ODsay 호출 ---------- */
+class FatalErr extends Error{}
+async function fetchTime(p,t){
+  const url=`https://api.odsay.com/v1/api/searchPubTransPathT?SX=${p.c[1]}&SY=${p.c[0]}&EX=${t.c[1]}&EY=${t.c[0]}&OPT=0&apiKey=${encodeURIComponent(apiKey)}`;
+  let res;
+  addUsage();
+  try{res=await fetch(url)}catch(e){throw new FatalErr("ODsay에 연결하지 못했어요. 파일을 컴퓨터에서 바로 열었다면, 웹에 올린 뒤 그 주소를 ODsay 애플리케이션에 등록해 주세요.")}
+  let j;try{j=await res.json()}catch(e){throw new FatalErr(`ODsay 응답을 읽지 못했어요 (HTTP ${res.status}).`)}
+  if(j.error){
+    const e=Array.isArray(j.error)?j.error[0]:j.error;
+    const code=String(e.code??""),msg=e.msg||e.message||"알 수 없는 오류";
+    const km=hav(p.c,t.c);
+    if(code==="-98")return {m:Math.max(1,Math.round(km*1000/70)),walk:true};
+    if(code==="-99"||code==="-97")return {m:Math.round(km*4+10),est:true};
+    throw new FatalErr(`ODsay 오류 (${code}): ${msg}. 키가 맞는지, 이 페이지 주소가 등록됐는지, 하루 호출 한도를 넘지 않았는지 확인해 주세요.`);
+  }
+  const paths=(j.result&&j.result.path)||[];
+  if(!paths.length)return {m:Math.round(hav(p.c,t.c)*4+10),est:true};
+  const best=paths.reduce((a,b)=>b.info.totalTime<a.info.totalTime?b:a);
+  return {m:best.info.totalTime,pay:best.info.payment,tr:(best.info.subwayTransitCount||0)+(best.info.busTransitCount||0)};
+}
+function pendingJobs(ppl,list){
+  const stations=[...new Map(ppl.map(p=>[p.st,p])).values()];
+  const jobs=[];
+  for(const t of list)for(const s of stations)if(!timeCache[tkey(s.st,t.name)])jobs.push([s,t]);
+  return jobs;
+}
+function topCandidates(ppl,n){return evaluate(targets(),ppl,"km").sort((a,b)=>a.score-b.score).slice(0,n)}
+
+async function runTransit(){
+  if(!apiKey){lastErr="먼저 위에서 ODsay API 키를 저장해 주세요.";render();return}
+  const ppl=pplList(),cands=topCandidates(ppl,topN),jobs=pendingJobs(ppl,cands),runTab=tab;
+  if(jobs.length>remaining()){lastErr=`호출이 ${jobs.length}번 필요한데 오늘 남은 횟수는 ${remaining()}번이에요. 후보 수를 줄이거나 내일 다시 해 주세요.`;render();return}
+  busy=true;lastErr="";prog={done:0,total:jobs.length};render();
+  let fatal=null;
+  const worker=async()=>{
+    while(jobs.length&&!fatal){
+      const [s,t]=jobs.shift();
+      try{timeCache[tkey(s.st,t.name)]=await fetchTime(s,t)}
+      catch(e){fatal=e.message||String(e);break}
+      prog.done++;updateProg();
+    }
+  };
+  await Promise.all([worker(),worker(),worker()]);
+  store.set("kq_time_cache",timeCache);
+  busy=false;
+  if(fatal){lastErr=fatal}else{timeRun[runTab]={names:cands.map(t=>t.name),sig:pSig(ppl)};showTime=true}
+  render();
+}
+function updateProg(){const el=$("#progbar"),tx=$("#progtx");if(el)el.style.width=(prog.total?prog.done/prog.total*100:100)+"%";if(tx)tx.textContent=`${prog.done} / ${prog.total}개 경로 계산 중`}
+
+/* ---------- 화면 ---------- */
+function render(){
+  const root=document.documentElement;
+  root.style.setProperty("--accent",tab==="park"?"var(--river)":"var(--tuna)");
+  root.style.setProperty("--accent-soft",tab==="park"?"var(--river-soft)":"var(--tuna-soft)");
+  const ppl=pplList(),out=$("#result");
+  if(ppl.length<2){out.innerHTML=`<div class="empty">출발역을 2명 이상 넣으면 결과가 나와요.<br>처음이라면 ‘예시로 채우기’를 눌러 보세요.</div>`;return}
+  const list=targets();
+  if(!list.length){out.innerHTML=`<div class="empty">비교할 지점이 없어요. 아래 ‘쿠우쿠우 지점 목록 편집’에서 지점을 추가해 주세요.</div>`;return}
+
+  const run=timeRun[tab];
+  const runValid=run&&run.sig===pSig(ppl)&&run.names.every(n=>list.some(t=>t.name===n))&&run.names.every(n=>ppl.every(p=>timeCache[tkey(p.st,n)]));
+  const timeMode=runValid&&showTime;
+  const ev=timeMode?evaluate(list.filter(t=>run.names.includes(t.name)),ppl,"min"):evaluate(list,ppl,"km");
+  const unit=timeMode?"분":"km",fmt=timeMode?(x=>String(Math.round(x))):(x=>x.toFixed(1));
+
+  // 대중교통 패널
+  const nCalls=pendingJobs(ppl,topCandidates(ppl,topN)).length;
+  let panel;
+  if(busy){
+    panel=`<div class="mode" id="progtx">${prog.done} / ${prog.total}개 경로 계산 중</div><div class="prog"><span id="progbar" style="width:${prog.total?prog.done/prog.total*100:0}%"></span></div>`;
+  }else if(timeMode){
+    panel=`<div class="mode">🚇 대중교통 소요시간 기준 · 직선거리 상위 ${run.names.length}곳</div>
+      <div class="row"><button type="button" id="tkm">직선거리로 보기</button></div>`;
+  }else{
+    panel=`<div class="mode">📏 지금은 직선거리 기준이에요</div>
+      <div class="row">
+        <label class="hint" for="topn">상위</label>
+        <select id="topn">${[1,2,3].map(n=>`<option value="${n}"${n===topN?" selected":""}>${n}곳</option>`).join("")}</select>
+        <button type="button" class="primary" id="trun"${apiKey?"":" disabled"}>대중교통 시간으로 비교</button>
+        ${runValid?`<button type="button" id="tshow">계산해 둔 시간 보기</button>`:""}
+      </div>
+      <p class="hint" style="margin:6px 0 0${apiKey&&nCalls>remaining()?";color:var(--warn)":""}">${apiKey?`필요한 호출 ${nCalls}번 · 오늘 남은 호출 ${remaining()}/${DAILY_LIMIT}번 (같은 역은 한 번만, 계산한 결과는 저장돼서 다시 부르지 않아요)`:"ODsay API 키를 저장하면 쓸 수 있어요."}</p>`;
+  }
+  if(lastErr)panel+=`<p class="err">${esc(lastErr)}</p>`;
+
+  const ranked=[...ev].sort((a,b)=>a.score-b.score);
+  const bySum=[...ev].sort((a,b)=>a.total-b.total)[0];
+  const byFair=[...ev].sort((a,b)=>a.max-b.max||a.total-b.total)[0];
+  const best=selected?ev.find(x=>x.name===selected)||ranked[0]:ranked[0];
+  const maxD=Math.max(...best.d);
+  const order=ppl.map((p,i)=>({p,d:best.d[i],m:best.meta[i]})).sort((a,b)=>b.d-a.d);
+  const bars=order.map(o=>{
+    let tag="";
+    if(o.m){if(o.m.walk)tag=" <small>도보</small>";else if(o.m.est)tag=" <small>추정</small>";else if(o.m.tr>1)tag=` <small>환승${o.m.tr-1}</small>`;}
+    return `<div class="bar"><span class="who">${esc(o.p.name)} <small>${esc(o.p.st)}</small></span><span class="track"><span class="fill${o.d===maxD?" far":""}" style="width:${Math.max(3,o.d/Math.max(maxD,1)*100)}%"></span></span><span class="val">${fmt(o.d)}${unit}${tag}</span></div>`;
+  }).join("");
+  const trade=bySum.name!==byFair.name
+    ?`<p class="tradeoff"><b>${esc(byFair.name)}</b>로 가면 합계는 ${fmt(byFair.total-bySum.total)}${unit} 늘지만, 가장 먼 사람은 ${fmt(bySum.max-byFair.max)}${unit} 줄어요.</p>`
+    :`<p class="tradeoff">합계로 봐도, 공평함으로 봐도 <b>${esc(bySum.name)}</b>가 가장 좋아요.</p>`;
+
+  out.innerHTML=`
+  <div class="transit">${panel}</div>
+  <div class="pick">
+    <p class="where">${esc(best.name)}</p>
+    <p class="near">${selected?"표에서 선택한 곳":"현재 기준 1순위"}${best.near?" · "+esc(best.near):""}</p>
+    <div class="stats"><span>합계 <b>${fmt(best.total)}${unit}</b></span><span>평균 <b>${fmt(best.mean)}${unit}</b></span><span>가장 먼 사람 <b>${fmt(best.max)}${unit}</b></span><span>편차 <b>±${fmt(best.sd)}${unit}</b></span></div>
+    <div class="bars">${bars}</div>
+  </div>
+  <div class="compare">
+    <div class="cmp"><h3>합계가 가장 짧은 곳</h3><div class="n">${esc(bySum.name)}</div><div class="s">합계 ${fmt(bySum.total)}${unit}, 최장 ${fmt(bySum.max)}${unit}</div></div>
+    <div class="cmp"><h3>가장 공평한 곳</h3><div class="n">${esc(byFair.name)}</div><div class="s">합계 ${fmt(byFair.total)}${unit}, 최장 ${fmt(byFair.max)}${unit}</div></div>
+  </div>
+  ${trade}
+  <div class="tablewrap"><table>
+    <thead><tr><th>순위</th><th>${tab==="park"?"한강공원":"지점"}</th><th>합계</th><th>평균</th><th>최장</th><th>편차</th></tr></thead>
+    <tbody>${ranked.map((r,i)=>`<tr class="${i===0?"top":""}${r.name===best.name?" sel":""}" data-n="${esc(r.name)}"><td>${i+1}</td><td>${esc(r.name)}</td><td>${fmt(r.total)}</td><td>${fmt(r.mean)}</td><td>${fmt(r.max)}</td><td>±${fmt(r.sd)}</td></tr>`).join("")}</tbody>
+  </table></div>
+  <p class="hint">표의 행을 누르면 그곳 기준으로 각자 ${timeMode?"소요시간":"거리"}을 볼 수 있어요. (단위: ${unit})</p>`;
+
+  out.querySelectorAll("tbody tr").forEach(tr=>tr.onclick=()=>{selected=tr.dataset.n;render();out.scrollIntoView({behavior:"smooth",block:"start"})});
+  const q=id=>out.querySelector(id);
+  if(q("#topn"))q("#topn").onchange=e=>{topN=+e.target.value;store.set("kq_topn",topN);render()};
+  if(q("#trun"))q("#trun").onclick=()=>{selected=null;runTransit()};
+  if(q("#tkm"))q("#tkm").onclick=()=>{showTime=false;selected=null;render()};
+  if(q("#tshow"))q("#tshow").onclick=()=>{showTime=true;selected=null;render()};
+}
+
+/* ---------- 지점 편집 ---------- */
+function renderBranches(){
+  $("#chips").innerHTML=branches.map((b,i)=>`<span class="chip">${esc(b.n)}<button type="button" data-i="${i}" aria-label="${esc(b.n)} 삭제">×</button></span>`).join("");
+}
+$("#chips").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;branches.splice(+b.dataset.i,1);store.set("kq_branches_v2",branches);renderBranches();render()});
+$("#badd").onclick=()=>{
+  const n=$("#bname").value.trim(),st=norm($("#bst").value);
+  if(!n){$("#bmsg").textContent="지점 이름을 입력해 주세요.";return}
+  if(!S[st]){$("#bmsg").textContent="역 이름을 목록에서 골라 주세요.";return}
+  branches.push({n,c:S[st],a:st+"역 근처 (직접 추가)"});store.set("kq_branches_v2",branches);
+  $("#bname").value="";$("#bst").value="";$("#bmsg").textContent=`${n}을(를) 추가했어요.`;renderBranches();render();
+};
+$("#breset").onclick=()=>{branches=DEFAULT_BRANCHES.map(x=>({...x}));store.set("kq_branches_v2",branches);$("#bmsg").textContent="기본 목록으로 되돌렸어요.";renderBranches();render()};
+
+renderPeople();renderBranches();render();
+</script>
+</body>
+</html>
